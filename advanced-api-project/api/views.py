@@ -67,25 +67,24 @@ from .serializers import BookSerializer
 class BookListView(generics.ListAPIView):
     """
     List all books with filtering, searching, and ordering.
-    
-    Features:
+
     - Filter by title, author, publication_year
     - Search by title and author name
-    - Order by any field (title, publication_year)
+    - Order by title and publication_year
     """
     queryset = Book.objects.all()
     serializer_class = BookSerializer
     permission_classes = [permissions.AllowAny]
 
-    # DRF filtering backends
+    # Enable filtering, search, and ordering
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
 
-    # Fields available for filtering via query parameters
+    # Fields for filtering
     filterset_fields = ['title', 'author', 'publication_year']
 
-    # Fields available for search (partial match)
+    # Fields for searching
     search_fields = ['title', 'author__name']
 
-    # Fields available for ordering
+    # Fields for ordering
     ordering_fields = ['title', 'publication_year']
     ordering = ['title']  # default ordering
