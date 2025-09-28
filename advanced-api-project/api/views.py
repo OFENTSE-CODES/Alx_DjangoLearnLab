@@ -2,41 +2,39 @@ from rest_framework import generics, permissions
 from .models import Book
 from .serializers import BookSerializer
 
-# -------------------------------
-# Public Views (read-only)
-# -------------------------------
-
+# ListView: Retrieve all books (read-only for unauthenticated users)
 class BookListView(generics.ListAPIView):
-    """
-    List all books.
-    Accessible to anyone (read-only).
-    """
     queryset = Book.objects.all()
     serializer_class = BookSerializer
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [permissions.AllowAny]  # Anyone can view
 
 
+# DetailView: Retrieve a single book by ID
 class BookDetailView(generics.RetrieveAPIView):
-    """
-    Retrieve a single book by ID.
-    Accessible to anyone (read-only).
-    """
     queryset = Book.objects.all()
     serializer_class = BookSerializer
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [permissions.AllowAny]  # Anyone can view
 
-# -------------------------------
-# Restricted Views (authenticated)
-# -------------------------------
 
+# CreateView: Add a new book (authenticated users only)
 class BookCreateView(generics.CreateAPIView):
-    """
-    Create a new book.
-    Restricted to authenticated users.
-    """
     queryset = Book.objects.all()
     serializer_class = BookSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated]  # Only logged-in users can create
+
+
+# UpdateView: Modify an existing book (authenticated users only)
+class BookUpdateView(generics.UpdateAPIView):
+    queryset = Book.objects.all()
+    serializer_class = BookSerializer
+    permission_classes = [permissions.IsAuthenticated]  # Only logged-in users can update
+
+
+# DeleteView: Remove a book (authenticated users only)
+class BookDeleteView(generics.DestroyAPIView):
+    queryset = Book.objects.all()
+    serializer_class = BookSerializer
+    permission_classes = [permissions.IsAuthenticated]  # On
 
 
 class BookUpdateView(generics.UpdateAPIView):
