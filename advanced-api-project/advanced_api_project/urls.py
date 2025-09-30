@@ -17,9 +17,12 @@ Including another URLconf
 """
 
 from django.contrib import admin
-from django.urls import path, include  # include is necessary to include app routes
+from django.urls import path, include  # include is necessary!
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/', include('api.urls')),  # This connects your 'api' app's URLs
-]
+
+    # This line connects your API app's URL patterns
+    path('api/', include('api.urls')),
+] 
+  
