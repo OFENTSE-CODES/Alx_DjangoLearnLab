@@ -41,3 +41,42 @@ def profile(request):
         u_form = UserUpdateForm(instance=request.user)
         p_form = ProfileUpdateForm(instance=request.user.profile)
     return render(request, 'blog/profile.html', {'u_form': u_form, 'p_form': p_form})
+
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth import login
+from django.contrib.auth.decorators import login_required
+from .forms import CustomUserCreationForm, ProfileForm, UserUpdateForm
+from django.contrib import messages
+from django.contrib.auth.models import User
+
+def register_view(request):
+    if request.method == "POST":
+        form = CustomUserCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            login(request, user)  # log the user in immediately after registration
+            messages.success(request, "Registration successful. You are now logged in.")
+            return redirect("home")
+        else:
+            messages.error(request, "Please fix the errors below.")
+    else:
+        form = CustomUserCreationForm()
+    return render(request, "registration/register.html", {"form": form})
+
+@login_required
+def profile_view(request):
+    # Show profile; also handle edits
+    if request.method == "POST":
+        uform = UserUpdateForm(request.POST, instance=request.user)
+        pform = ProfileForm(request.POST, request.FILES, instance=request.user.profile)
+        if uform.is_valid() and pform.is_valid():
+            uform.save()
+            pform.save()
+            messages.success(request, "Your profile has been updated.")
+            return redirect("profile")
+        else:
+            messages.error(request, "Please correct the errors below.")
+    else:
+        uform = UserUpdateForm(instance=request.user)
+        pform = ProfileForm(instance=request.user.profile)
+    return render(request, "registration/profile.html", {"uform": uform, "pform": pform})
