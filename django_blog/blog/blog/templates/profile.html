@@ -1,17 +1,17 @@
 {% extends 'blog/base.html' %}
+{% block title %}Your Profile{% endblock %}
 {% block content %}
-<h2>Welcome, {{ user.username }}!</h2>
-<p>Email: {{ user.email }}</p>
-<a href="{% url 'logout' %}">Logout</a>
-{% endblock %}
-
-{% extends 'blog/base.html' %}
-{% block content %}
-<h2>Your Profile</h2>
-<form method="post">
+  <h2>Your profile</h2>
+  <form method="post" enctype="multipart/form-data">
     {% csrf_token %}
-    {{ form.as_p }}
+    <h3>User info</h3>
+    {{ u_form.as_p }}
+    <h3>Profile</h3>
+    {{ p_form.as_p }}
     <button type="submit">Update</button>
-</form>
-<a href="{% url 'logout' %}">Logout</a>
-{% endblock %} 
+  </form>
+
+  {% if user.profile.avatar %}
+    <img src="{{ user.profile.avatar.url }}" alt="avatar" style="max-width:200px;">
+  {% endif %}
+{% endblock %}
