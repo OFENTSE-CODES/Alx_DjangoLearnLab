@@ -1,0 +1,35 @@
+{% extends "blog/base.html" %}
+{% load static %}
+{% block content %}
+  <h2>Your profile</h2>
+
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+
+    <div>
+      <label for="id_email">Email</label>
+      {{ form.email }}
+      {{ form.email.errors }}
+    </div>
+
+    <div>
+      <label for="{{ form.bio.id_for_label }}">Bio</label>
+      {{ form.bio }}
+      {{ form.bio.errors }}
+    </div>
+
+    <div>
+      <label for="{{ form.avatar.id_for_label }}">Avatar</label>
+      {% if user.profile.avatar %}
+        <div>
+          <img src="{{ user.profile.avatar.url }}" alt="avatar" style="max-width:120px;max-height:120px;">
+        </div>
+      {% endif %}
+      {{ form.avatar }}
+      {{ form.avatar.errors }}
+    </div>
+
+    <button type="submit">Save changes</button>
+  </form>
+{% endblock %}
