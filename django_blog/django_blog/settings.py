@@ -30,7 +30,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'blog',  
+    'blog',  # blog app
 ]
 
 MIDDLEWARE = [
@@ -48,7 +48,7 @@ ROOT_URLCONF = 'django_blog.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, 'blog/templates')],  # custom templates
+        'DIRS': [os.path.join(BASE_DIR, 'blog/templates')],  # templates dir
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -64,11 +64,15 @@ TEMPLATES = [
 WSGI_APPLICATION = 'django_blog.wsgi.application'
 
 
-# Database (default = SQLite)
+# Database (PostgreSQL configuration)
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'django_blog_db',     # change to your database name
+        'USER': 'postgres',           # change to your DB username
+        'PASSWORD': 'your_password',  # change to your DB password
+        'HOST': 'localhost',          # or your DB host
+        'PORT': '5432',               # default PostgreSQL port
     }
 }
 
@@ -102,7 +106,7 @@ USE_TZ = True
 
 # Static files (CSS, JS, Images)
 STATIC_URL = '/static/'
-STATICFILES_DIRS = [os.path.join(BASE_DIR, 'blog/static')]  # look in blog/static
+STATICFILES_DIRS = [os.path.join(BASE_DIR, 'blog/static')]
 
 # Default primary key field type
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField' 
