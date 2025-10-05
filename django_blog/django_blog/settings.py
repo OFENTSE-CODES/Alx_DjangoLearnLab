@@ -9,17 +9,13 @@ https://docs.djangoproject.com/en/5.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
-import os
 from pathlib import Path
+import os
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+SECRET_KEY = 'django-insecure-replace-this-with-your-own-secret-key'
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-REPLACE_THIS_WITH_A_SECRET_KEY'
-
-# SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
 ALLOWED_HOSTS = []
@@ -27,16 +23,13 @@ ALLOWED_HOSTS = []
 
 # Application definition
 INSTALLED_APPS = [
-    # Default Django apps
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-
-    # Your custom apps
-    'blog',
+    'blog',  # blog app
 ]
 
 MIDDLEWARE = [
@@ -54,8 +47,8 @@ ROOT_URLCONF = 'django_blog.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],  # You can add global template paths here if needed
-        'APP_DIRS': True,  # This allows templates in app/templates folders
+        'DIRS': [os.path.join(BASE_DIR, 'blog/templates')],  # templates dir
+        'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
                 'django.template.context_processors.debug',
@@ -70,12 +63,15 @@ TEMPLATES = [
 WSGI_APPLICATION = 'django_blog.wsgi.application'
 
 
-# Database
-# Default: SQLite (change to PostgreSQL if needed)
+# Database (PostgreSQL configuration)
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'django_blog_db',     # change to your database name
+        'USER': 'postgres',           # change to your DB username
+        'PASSWORD': 'your_password',  # change to your DB password
+        'HOST': 'localhost',          # or your DB host
+        'PORT': '5432',               # default PostgreSQL port
     }
 }
 
@@ -99,17 +95,17 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # Internationalization
 LANGUAGE_CODE = 'en-us'
+
 TIME_ZONE = 'UTC'
+
 USE_I18N = True
-USE_L10N = True
+
 USE_TZ = True
 
 
-# Static files (CSS, JavaScript, Images)
+# Static files (CSS, JS, Images)
 STATIC_URL = '/static/'
-
-# Optional: specify static files dir if needed
-# STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
+STATICFILES_DIRS = [os.path.join(BASE_DIR, 'blog/static')]
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
