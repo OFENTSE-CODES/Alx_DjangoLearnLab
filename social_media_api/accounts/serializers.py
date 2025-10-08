@@ -29,13 +29,16 @@ class RegisterSerializer(serializers.ModelSerializer):
         validate_password(attrs['password'])
         return attrs
 
-    # Create the user instance
+    # Create the user instance and generate the token
     def create(self, validated_data):
         password = validated_data.pop('password')
         user = get_user_model().objects.create_user(**validated_data)
         user.set_password(password)
         user.save()
-        return user
+
+        # Explicitly create the token here
+        token = Token.objects.create(user=user)
+        return user, token
 
 
 # Serializer for login (authentication)
