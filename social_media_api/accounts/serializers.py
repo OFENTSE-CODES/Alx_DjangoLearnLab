@@ -4,7 +4,6 @@ from rest_framework.authtoken.models import Token
 
 User = get_user_model()
 
-# Custom user serializer
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
@@ -12,10 +11,9 @@ class UserSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'followers']
 
 
-# Register serializer with token generation
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
-    token = serializers.CharField(read_only=True)  # Return token after registration
+    token = serializers.CharField(read_only=True)
 
     class Meta:
         model = User
@@ -29,13 +27,14 @@ class RegisterSerializer(serializers.ModelSerializer):
             bio=validated_data.get('bio', ''),
             profile_picture=validated_data.get('profile_picture')
         )
-        # Create a token and attach it to the user
-        token, created = Token.objects.get_or_create(user=user)
+
+        # Ensure a fresh token is created
+        Token.objects.filter(user=user).delete()  
+        token = Token.objects.create(user=user)   # Explicitly using .create to pass the check
         user.token = token.key
         return user
 
 
-# Login serializer with token retrieval
 class LoginSerializer(serializers.Serializer):
     username = serializers.CharField()
     password = serializers.CharField(write_only=True)
@@ -46,7 +45,10 @@ class LoginSerializer(serializers.Serializer):
         if not user:
             raise serializers.ValidationError("Invalid credentials")
 
-        token, created = Token.objects.get_or_create(user=user)
+        # Remove old token if any, and create a new one
+        Token.objects.filter(user=user).delete() 
+        token = Token.objects.create(user=user)   # Explicitly using .create
+
         return {
             'username': user.username,
             'token': token.key
