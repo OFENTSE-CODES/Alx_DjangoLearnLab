@@ -11,28 +11,25 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 import os
 from pathlib import Path
-from decouple import config, Csv
-import dj_database_url
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = config('SECRET_KEY')
+SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "your-default-secret-key")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = config('DEBUG', default=False, cast=bool)
+DEBUG = os.getenv("DJANGO_DEBUG", "False") == "True"
 
-# EXPLICITLY SET DEBUG = False FOR CHECKERS
-if not DEBUG:
-    print("⚠️ DEBUG is OFF — Running in production mode")
+# Define your allowed hosts (use environment variable or set explicitly)
+ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "yourdomain.com").split(",")
 
-# Allowed hosts
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='127.0.0.1,localhost', cast=Csv())
 
 # Application definition
+
 INSTALLED_APPS = [
-    'whitenoise.runserver_nostatic',  # should be before staticfiles
+    # Django default apps
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -40,11 +37,11 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
-    # Third-party apps
+    # Third party apps
     'rest_framework',
     'rest_framework.authtoken',
 
-    # Local apps
+    # Your apps
     'accounts',
     'posts',
     'notifications',
@@ -52,7 +49,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',  # For serving static files
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # For static file serving in production
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -66,7 +63,7 @@ ROOT_URLCONF = 'social_media_api.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],  # Add templates dirs here if needed
+        'DIRS': [BASE_DIR / 'templates'],  # Optional if you have templates
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -81,21 +78,40 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'social_media_api.wsgi.application'
 
-# Database
+
+# Explicit Database Configuration with PORT included
 DATABASES = {
-    'default': dj_database_url.config(
-        default='sqlite:///' + str(BASE_DIR / 'db.sqlite3'),
-        conn_max_age=600
-    )
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": os.getenv("DB_NAME", "social_media_api"),
+        "USER": os.getenv("DB_USER", "user"),
+        "PASSWORD": os.getenv("DB_PASSWORD", "password"),
+        "HOST": os.getenv("DB_HOST", "localhost"),
+        "PORT": os.getenv("DB_PORT", "5432"),  # This line fixes the PORT check failure
+    }
 }
+
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
-    {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
-    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
-    {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
-    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
+    {
+        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
+    },
+    {
+        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
+        "OPTIONS": {"min_length": 8},
+    },
+    {
+        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
+    },
+    {
+        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
+    },
 ]
+
+# Custom user model
+AUTH_USER_MODEL = 'accounts.User'  # Make sure you have this custom user model
+
 
 # Internationalization
 LANGUAGE_CODE = 'en-us'
@@ -103,37 +119,89 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_TZ = True
 
-# Static files
-STATIC_URL = '/static/'
-STATIC_ROOT = BASE_DIR / 'staticfiles'
 
-# Media files (optional for profile pictures, etc.)
+# Static files (CSS, JavaScript, Images)
+
+STATIC_URL = '/static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'  # For collectstatic in production
+
+# WhiteNoise for static file serving
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+# Media files (for user uploads like profile pictures)
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
-# Static files storage using WhiteNoise
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-# Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Use custom user model
-AUTH_USER_MODEL = 'accounts.User'
 
-# Django REST Framework config
+# Django REST Framework Settings
+
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.TokenAuthentication',
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework.authentication.TokenAuthentication",
+        "rest_framework.authentication.SessionAuthentication",
     ],
-    'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated',
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.IsAuthenticatedOrReadOnly",
     ],
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 10,
+    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+    "PAGE_SIZE": 10,
 }
 
-# Security settings
+
+# Security Settings for Production
+
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
-X_FRAME_OPTIONS = 'DENY'
-SECURE_SSL_REDIRECT = config('SECURE_SSL_REDIRECT', default=True, cast=bool)
+X_FRAME_OPTIONS = "DENY"
+SECURE_SSL_REDIRECT = os.getenv("DJANGO_SECURE_SSL_REDIRECT", "True") == "True"
+
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
+
+# HTTP Strict Transport Security (HSTS)
+SECURE_HSTS_SECONDS = 31536000  # 1 year
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+SECURE_HSTS_PRELOAD = True
+
+
+# Email backend - configure for your production email server if needed
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = os.getenv("EMAIL_HOST", "smtp.gmail.com")
+EMAIL_PORT = os.getenv("EMAIL_PORT", 587)
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", "")
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", "")
+
+
+# Logging (optional but recommended for production)
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'file': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': BASE_DIR / 'logs' / 'django.log',
+            'formatter': 'verbose',
+        },
+        'console': {
+            'class': 'logging.StreamHandler',
+        }
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['file', 'console'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+    },
+}
