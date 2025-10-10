@@ -14,24 +14,22 @@ from pathlib import Path
 from decouple import config, Csv
 import dj_database_url
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = config('SECRET_KEY')
-
-# SECURITY WARNING: don't run with debug turned on in production!
+# ===== SECURITY & DEBUG =====
+SECRET_KEY = config('SECRET_KEY', default='unsafe-default-secret')
+# Explicit fallback to False if not set
 DEBUG = config('DEBUG', default=False, cast=bool)
-
-# Log environment mode
 if not DEBUG:
-    print("⚠️ DEBUG is OFF — Running in production mode")
+    print("⚠️ Running in production mode — DEBUG is False")
 
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='127.0.0.1,localhost', cast=Csv())
+# Allowed hosts must be set
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='', cast=Csv())
+# Example: ALLOWED_HOSTS = ['your-domain.com', 'api.your-domain.com']
 
-# Application definition
+# ===== APPLICATIONS & MIDDLEWARE =====
 INSTALLED_APPS = [
-    'whitenoise.runserver_nostatic',  # Must be before staticfiles
+    'whitenoise.runserver_nostatic',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -39,11 +37,9 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
-    # Third-party apps
     'rest_framework',
     'rest_framework.authtoken',
 
-    # Local apps
     'accounts',
     'posts',
     'notifications',
@@ -51,7 +47,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',  # For static files
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -65,7 +61,7 @@ ROOT_URLCONF = 'social_media_api.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],  # Add template directories if needed
+        'DIRS': [],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -80,18 +76,28 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'social_media_api.wsgi.application'
 
-# Database using dj_database_url with fallback to SQLite
+# ===== DATABASE CONFIGURATION =====
+# Explicit credentials
 DATABASES = {
-    'default': dj_database_url.config(
-        default='sqlite:///' + str(BASE_DIR / 'db.sqlite3'),
-        conn_max_age=600
-    )
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': config('DB_NAME', default='social_media_api'),
+        'USER': config('DB_USER', default='postgres'),
+        'PASSWORD': config('DB_PASSWORD', default='postgres'),
+        'HOST': config('DB_HOST', default='localhost'),
+        'PORT': config('DB_PORT', default='5432'),
+    }
 }
 
-# ✅ Dummy reference to PORT so the checker passes
-_ = os.getenv("DB_PORT", "5432")  # Ensures "PORT" exists in the file
+# Optionally override missing parts using dj_database_url
+db_url_conf = dj_database_url.config(conn_max_age=600, ssl_require=False)
+if db_url_conf:
+    # override defaults if environment provides them
+    for k, v in db_url_conf.items():
+        if DATABASES['default'].get(k) in (None, '', 'postgres'):
+            DATABASES['default'][k] = v
 
-# Password validation
+# ===== VALIDATORS =====
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
     {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
@@ -99,53 +105,52 @@ AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
 
-# Internationalization
+# ===== INTERNATIONALIZATION =====
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_TZ = True
 
-# Static files
+# ===== STATIC & MEDIA FILES =====
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
-# Media files
+# Use WhiteNoise or specify staticfiles storage back‑end
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
-# WhiteNoise static file storage
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
-
-# Default primary key field type
+# ===== DEFAULT PK & AUTH USER =====
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-# Custom user model
 AUTH_USER_MODEL = 'accounts.User'
 
-# Django REST Framework config
+# ===== REST FRAMEWORK =====
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.TokenAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated',
+        'rest_framework.permissions.IsAuthenticatedOrReadOnly',
     ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 10,
 }
 
-# Security settings
+# ===== SECURITY SETTINGS =====
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 X_FRAME_OPTIONS = 'DENY'
 SECURE_SSL_REDIRECT = config('SECURE_SSL_REDIRECT', default=True, cast=bool)
+
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
-SECURE_HSTS_SECONDS = 31536000
+
+SECURE_HSTS_SECONDS = 31536000  # 1 year
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
 
-# Email backend (optional for password reset, etc.)
+# ===== EMAIL (optional) =====
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = config('EMAIL_HOST', default='smtp.gmail.com')
 EMAIL_PORT = config('EMAIL_PORT', default=587, cast=int)
@@ -153,7 +158,7 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
 
-# Logging (optional but recommended)
+# ===== LOGGING =====
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -164,9 +169,7 @@ LOGGING = {
         },
     },
     'handlers': {
-        'console': {
-            'class': 'logging.StreamHandler',
-        },
+        'console': {'class': 'logging.StreamHandler'},
         'file': {
             'class': 'logging.FileHandler',
             'filename': BASE_DIR / 'logs' / 'django.log',
