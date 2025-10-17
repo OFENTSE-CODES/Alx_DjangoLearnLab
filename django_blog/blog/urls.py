@@ -43,3 +43,39 @@ urlpatterns += [
     path('search/', SearchResultsView.as_view(), name='search-posts'),
     path('tags/<str:tag>/', views.PostsByTagView.as_view(), name='posts-by-tag'),
 ]
+
+
+from django.urls import path
+from . import views
+from .views import (
+    PostListView,
+    PostDetailView,
+    PostCreateView,
+    PostUpdateView,
+    PostDeleteView,
+    PostByTagListView,
+    SearchResultsView,
+    CommentCreateView,
+    CommentUpdateView,
+    CommentDeleteView,
+)
+
+urlpatterns = [
+    # Blog post CRUD
+    path('', PostListView.as_view(), name='post-list'),
+    path('posts/new/', PostCreateView.as_view(), name='post-create'),
+    path('posts/<int:pk>/', PostDetailView.as_view(), name='post-detail'),
+    path('posts/<int:pk>/edit/', PostUpdateView.as_view(), name='post-update'),
+    path('posts/<int:pk>/delete/', PostDeleteView.as_view(), name='post-delete'),
+
+    # Comment CRUD
+    path('posts/<int:pk>/comments/new/', CommentCreateView.as_view(), name='comment-create'),
+    path('comments/<int:pk>/edit/', CommentUpdateView.as_view(), name='comment-update'),
+    path('comments/<int:pk>/delete/', CommentDeleteView.as_view(), name='comment-delete'),
+
+    #  Search functionality
+    path('search/', SearchResultsView.as_view(), name='search-posts'),
+
+    # Tag filtering
+    path('tags/<slug:tag_slug>/', PostByTagListView.as_view(), name='posts-by-tag'),
+]
