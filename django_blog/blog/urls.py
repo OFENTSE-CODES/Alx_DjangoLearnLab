@@ -1,10 +1,16 @@
 from django.urls import path
-from . import views
+from .views import (
+    PostListView,
+    PostDetailView,
+    PostCreateView,
+    PostUpdateView,  # Make sure this is imported
+    PostDeleteView
+)
 
 urlpatterns = [
-    path('', views.PostListView.as_view(), name='post-list'),  # List all posts
-    path('post/<int:pk>/', views.PostDetailView.as_view(), name='post-detail'),  # View single post
-    path('post/new/', views.PostCreateView.as_view(), name='post-create'),  # Create a new post
-    path('post/<int:pk>/edit/', views.PostUpdateView.as_view(), name='post-update'),  # Edit a post
-    path('post/<int:pk>/delete/', views.PostDeleteView.as_view(), name='post-delete'),  # Delete a post
+    path('', PostListView.as_view(), name='post-list'),
+    path('post/<int:pk>/', PostDetailView.as_view(), name='post-detail'),
+    path('post/new/', PostCreateView.as_view(), name='post-create'),
+    path('post/<int:pk>/update/', PostUpdateView.as_view(), name='post-update'),  # ✅ Add this line
+    path('post/<int:pk>/delete/', PostDeleteView.as_view(), name='post-delete'),
 ]
