@@ -141,3 +141,18 @@ class PostsByTagView(ListView):
         context = super().get_context_data(**kwargs)
         context['tag'] = self.tag
         return context
+
+from .forms import UserUpdateForm
+
+@login_required
+def profile(request):
+    if request.method == 'POST':
+        form = UserUpdateForm(request.POST, instance=request.user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Your profile has been updated.')
+            return redirect('profile')
+    else:
+        form = UserUpdateForm(instance=request.user)
+    
+    return render(request, 'blog/profile.html', {'form': form})
