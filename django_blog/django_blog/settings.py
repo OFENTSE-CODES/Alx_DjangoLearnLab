@@ -10,23 +10,21 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
-import os
 from pathlib import Path
+import os
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
+# BASE_DIR points to the root project directory
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
+# SECURITY WARNING: keep the secret key secret in production!
+SECRET_KEY = 'django-insecure-CHANGE_ME_TO_A_SECRET_KEY'
 
-SECRET_KEY = 'django-insecure-xx@!+_-(random-generated-key)-1234)'
-
+# SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
 ALLOWED_HOSTS = []
 
 # Application definition
-
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -34,7 +32,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'blog',  # Add the 'blog' app here
+    'blog',  # Your blog app
 ]
 
 MIDDLEWARE = [
@@ -52,7 +50,9 @@ ROOT_URLCONF = 'django_blog.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'blog/templates'],  # Tell Django to look for templates inside 'blog/templates/'
+        'DIRS': [
+            BASE_DIR / 'blog' / 'templates',  # blog/templates/
+        ],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -67,27 +67,15 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'django_blog.wsgi.application'
 
-# Database configuration
-# By default, Django uses SQLite, which is fine for development.
-# To use PostgreSQL or another database, you'll need to update this section.
-
+# Database (default: SQLite)
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',  # Use 'postgresql' for PostgreSQL
-        'NAME': BASE_DIR / 'db.sqlite3',  # Use this if you're using SQLite
-        # For PostgreSQL, update with the following:
-        # 'ENGINE': 'django.db.backends.postgresql',
-        # 'NAME': 'your_db_name',
-        # 'USER': 'your_db_user',
-        # 'PASSWORD': 'your_db_password',
-        # 'HOST': 'localhost',
-        # 'PORT': '5432',
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
 
 # Password validation
-# https://docs.djangoproject.com/en/3.2/ref/settings/#auth-password-validators
-
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
@@ -104,33 +92,25 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 # Internationalization
-# https://docs.djangoproject.com/en/3.2/topics/i18n/
-
 LANGUAGE_CODE = 'en-us'
-
 TIME_ZONE = 'UTC'
-
 USE_I18N = True
-
-USE_L10N = True
-
 USE_TZ = True
 
-# Static files (CSS, JavaScript, images)
-# https://docs.djangoproject.com/en/3.2/howto/static-files/
-
+# Static files (CSS, JavaScript, Images)
 STATIC_URL = '/static/'
-
-# To set up static file directories (for custom CSS, JS, images):
 STATICFILES_DIRS = [
-    BASE_DIR / 'blog/static',  # Add 'blog/static' to your STATICFILES_DIRS
+    BASE_DIR / 'blog' / 'static',  # blog/static/
 ]
 
-# Media files (for user-uploaded content)
-# If you plan to handle file uploads (images, documents, etc.), define a MEDIA_URL and MEDIA_ROOT.
-
+# Media files (for user uploads, if needed later)
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
-# Default primary key field type
+# Authentication redirects
+LOGIN_URL = 'login'                   # name of the login URL path
+LOGIN_REDIRECT_URL = 'profile'        # after successful login
+LOGOUT_REDIRECT_URL = 'login'         # after logout
+
+# Default auto field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
