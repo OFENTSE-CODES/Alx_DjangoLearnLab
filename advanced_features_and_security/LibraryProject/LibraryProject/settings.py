@@ -13,19 +13,19 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 import os
 from pathlib import Path
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
+# --- BASE DIRECTORY ---
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# --- SECURITY SETTINGS ---
+DEBUG = False
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'your-secret-key-here'  # Replace with your actual secret
+ALLOWED_HOSTS = ['yourdomain.com']  # Replace with your actual domain/IP
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+# --- SECRET KEY ---
+# Make sure to use a real secret key in production (don't hardcode!)
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'insecure-default-key')
 
-ALLOWED_HOSTS = []
-
-# Application definition
+# --- INSTALLED APPS ---
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -33,14 +33,14 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-
-    # Your custom app
-    'accounts',
-    # Add other apps here as needed
+    'csp',  # Content Security Policy
+    'bookshelf',  # your app
 ]
 
+# --- MIDDLEWARE ---
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'csp.middleware.CSPMiddleware',  # CSP middleware before CommonMiddleware
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -49,12 +49,14 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'advanced_features_and_security.urls'
+# --- URL CONFIGURATION ---
+ROOT_URLCONF = 'LibraryProject.urls'
 
+# --- TEMPLATES ---
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, 'templates')],  # global templates dir
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -67,10 +69,10 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'advanced_features_and_security.wsgi.application'
+# --- WSGI ---
+WSGI_APPLICATION = 'LibraryProject.wsgi.application'
 
-# Database
-# Default: SQLite. Customize as needed.
+# --- DATABASE ---
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
@@ -78,43 +80,64 @@ DATABASES = {
     }
 }
 
-# Custom User Model
-AUTH_USER_MODEL = 'accounts.CustomUser'
-
-# Password validation
+# --- PASSWORD VALIDATION ---
 AUTH_PASSWORD_VALIDATORS = [
-    {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    },
+    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
-# Internationalization
+# --- INTERNATIONALIZATION ---
 LANGUAGE_CODE = 'en-us'
-
 TIME_ZONE = 'UTC'
-
 USE_I18N = True
-
+USE_L10N = True
 USE_TZ = True
 
-# Static files (CSS, JavaScript, Images)
+# --- STATIC FILES ---
 STATIC_URL = '/static/'
-STATICFILES_DIRS = [BASE_DIR / "static"]
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATICFILES_DIRS = [BASE_DIR / 'static']
 
-# Media files (uploads like profile photos)
+# --- MEDIA FILES ---
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
-# Default primary key field type
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
+# --- CUSTOM USER MODEL ---
 AUTH_USER_MODEL = 'bookshelf.CustomUser'
+
+# --- SECURITY HEADERS ---
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+X_FRAME_OPTIONS = 'DENY'
+
+# Ensure cookies are only sent over HTTPS
+CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = True
+
+# HSTS – HTTP Strict Transport Security
+SECURE_HSTS_SECONDS = 3600  # Increase in production
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+SECURE_HSTS_PRELOAD = True
+
+# --- CSP SETTINGS (via django-csp) ---
+CSP_DEFAULT_SRC = ("'self'",)
+CSP_SCRIPT_SRC = ("'self'", 'https://cdnjs.cloudflare.com')  # Modify as needed
+CSP_STYLE_SRC = ("'self'", 'https://fonts.googleapis.com')
+CSP_FONT_SRC = ("'self'", 'https://fonts.gstatic.com')
+CSP_IMG_SRC = ("'self'", 'data:')
+CSP_CONNECT_SRC = ("'self'",)
+
+# --- LOGGING (Optional) ---
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {'class': 'logging.StreamHandler'},
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'WARNING',
+    },
+}
