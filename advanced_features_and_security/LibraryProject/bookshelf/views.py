@@ -41,3 +41,23 @@ def book_delete(request, pk):
         book.delete()
         return redirect('book_list')
     return render(request, 'bookshelf/book_confirm_delete.html', {'book': book})
+
+from django.shortcuts import render
+from .models import Book
+from django.db.models import Q
+from .forms import SearchForm  # Defined below
+
+def search_books(request):
+    form = SearchForm(request.GET or None)
+    books = Book.objects.none()
+
+    if form.is_valid():
+        query = form.cleaned_data['query']
+        books = Book.objects.filter(
+            Q(title__icontains=query) | Q(author__icontains=query)
+        )
+
+    return render(request, 'bookshelf/book_list.html', {
+        'form': form,
+        'books': books
+    })
