@@ -9,23 +9,25 @@ https://docs.djangoproject.com/en/5.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
-
 import os
 from pathlib import Path
 
-# --- BASE DIRECTORY ---
+# BASE DIR
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# --- SECURITY SETTINGS ---
+# SECRET KEY — use environment variable in production
+SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'insecure-secret-key-change-me')
+
+# DEBUG MODE — MUST be False in production
 DEBUG = False
 
-ALLOWED_HOSTS = ['yourdomain.com']  # Replace with your actual domain/IP
+# ALLOWED HOSTS — must be set correctly in production
+ALLOWED_HOSTS = ['yourdomain.com', 'www.yourdomain.com']  
 
-# --- SECRET KEY ---
-# Make sure to use a real secret key in production (don't hardcode!)
-SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'insecure-default-key')
 
-# --- INSTALLED APPS ---
+# ========================================
+# APPLICATION CONFIG
+# ========================================
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -33,15 +35,18 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'csp',  # Content Security Policy
+    
     'bookshelf',  # your app
+    'csp',        # content security policy middleware
 ]
 
-# --- MIDDLEWARE ---
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'csp.middleware.CSPMiddleware',  # CSP middleware before CommonMiddleware
     'django.contrib.sessions.middleware.SessionMiddleware',
+
+    # Security: CSP Middleware
+    'csp.middleware.CSPMiddleware',
+
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -49,14 +54,12 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-# --- URL CONFIGURATION ---
 ROOT_URLCONF = 'LibraryProject.urls'
 
-# --- TEMPLATES ---
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'templates'],
+        'DIRS': [BASE_DIR / 'templates'], 
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -69,10 +72,12 @@ TEMPLATES = [
     },
 ]
 
-# --- WSGI ---
 WSGI_APPLICATION = 'LibraryProject.wsgi.application'
 
-# --- DATABASE ---
+
+# ========================================
+# DATABASE CONFIG
+# ========================================
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
@@ -80,64 +85,97 @@ DATABASES = {
     }
 }
 
-# --- PASSWORD VALIDATION ---
+
+# ========================================
+# PASSWORD VALIDATION
+# ========================================
 AUTH_PASSWORD_VALIDATORS = [
-    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
-    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
-    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
-    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
+    {
+        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+    },
 ]
 
-# --- INTERNATIONALIZATION ---
+
+# ========================================
+# INTERNATIONALIZATION
+# ========================================
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'
 USE_I18N = True
-USE_L10N = True
 USE_TZ = True
 
-# --- STATIC FILES ---
+
+# ========================================
+# STATIC AND MEDIA FILES
+# ========================================
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
-STATICFILES_DIRS = [BASE_DIR / 'static']
 
-# --- MEDIA FILES ---
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
-# --- CUSTOM USER MODEL ---
-AUTH_USER_MODEL = 'bookshelf.CustomUser'
 
-# --- SECURITY HEADERS ---
-SECURE_BROWSER_XSS_FILTER = True
-SECURE_CONTENT_TYPE_NOSNIFF = True
-X_FRAME_OPTIONS = 'DENY'
+# ========================================
+# SECURITY SETTINGS
+# ========================================
 
-# Ensure cookies are only sent over HTTPS
-CSRF_COOKIE_SECURE = True
+#  Redirect all HTTP to HTTPS
+SECURE_SSL_REDIRECT = True
+
+#  Ensure cookies are sent over HTTPS only
 SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
 
-# HSTS – HTTP Strict Transport Security
-SECURE_HSTS_SECONDS = 3600  # Increase in production
+#  HSTS (Strict HTTPS enforcement)
+SECURE_HSTS_SECONDS = 31536000  # One year
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
 
-# --- CSP SETTINGS (via django-csp) ---
+#  Security headers
+X_FRAME_OPTIONS = 'DENY'                         # Prevent clickjacking
+SECURE_CONTENT_TYPE_NOSNIFF = True              # Prevent MIME-type sniffing
+SECURE_BROWSER_XSS_FILTER = True                # Enable XSS protection
+
+#  Content Security Policy
 CSP_DEFAULT_SRC = ("'self'",)
-CSP_SCRIPT_SRC = ("'self'", 'https://cdnjs.cloudflare.com')  # Modify as needed
+CSP_SCRIPT_SRC = ("'self'",)
 CSP_STYLE_SRC = ("'self'", 'https://fonts.googleapis.com')
 CSP_FONT_SRC = ("'self'", 'https://fonts.gstatic.com')
-CSP_IMG_SRC = ("'self'", 'data:')
-CSP_CONNECT_SRC = ("'self'",)
 
-# --- LOGGING (Optional) ---
+
+# ========================================
+# LOGGING (Optional: Enable for debugging in production)
+# ========================================
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
     'handlers': {
-        'console': {'class': 'logging.StreamHandler'},
+        'file': {
+            'level': 'WARNING',
+            'class': 'logging.FileHandler',
+            'filename': BASE_DIR / 'django_errors.log',
+        },
     },
-    'root': {
-        'handlers': ['console'],
-        'level': 'WARNING',
+    'loggers': {
+        'django': {
+            'handlers': ['file'],
+            'level': 'WARNING',
+            'propagate': True,
+        },
     },
 }
+
+
+# ========================================
+# DEFAULT PRIMARY KEY FIELD TYPE
+# ========================================
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
