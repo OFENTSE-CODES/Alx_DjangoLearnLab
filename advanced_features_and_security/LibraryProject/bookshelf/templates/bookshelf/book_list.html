@@ -1,0 +1,10 @@
+<form method="get">
+    {{ form.as_p }}
+    <button type="submit">Search</button>
+</form>
+
+<ul>
+  {% for book in results %}
+    <li>{{ book.title|escape }}</li>  <!-- |escape prevents XSS -->
+  {% endfor %}
+</ul>
