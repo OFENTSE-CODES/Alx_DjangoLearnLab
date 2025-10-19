@@ -61,3 +61,21 @@ def search_books(request):
         'form': form,
         'books': books
     })
+
+from django.shortcuts import render, redirect
+from .forms import ExampleForm
+from django.contrib import messages
+
+def example_form_view(request):
+    if request.method == 'POST':
+        form = ExampleForm(request.POST)
+        if form.is_valid():
+            # Process the data in form.cleaned_data
+            # For ModelForm, you can save directly:
+            form.save()
+            messages.success(request, 'Form submitted successfully.')
+            return redirect('example-form')  # Replace with the name of your URL
+    else:
+        form = ExampleForm()
+
+    return render(request, 'bookshelf/form_example.html', {'form': form})
