@@ -75,3 +75,40 @@ class UnfollowUserView(APIView):
 
         request.user.following.remove(to_unfollow)
         return Response({"detail": f"You have unfollowed {to_unfollow.username}."}, status=200)
+from rest_framework import generics, status
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from django.contrib.auth import get_user_model
+from .serializers import FollowSerializer
+
+CustomUser = get_user_model()
+
+class FollowUserView(generics.GenericAPIView):
+    queryset = CustomUser.objects.all()  # required
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, user_id):
+        try:
+            target_user = CustomUser.objects.get(id=user_id)
+        except CustomUser.DoesNotExist:
+            return Response({"detail": "User does not exist."}, status=status.HTTP_404_NOT_FOUND)
+
+        if target_user == request.user:
+            return Response({"detail": "You cannot follow yourself."}, status=status.HTTP_400_BAD_REQUEST)
+
+        request.user.following.add(target_user)
+        return Response({"detail": f"You are now following {target_user.username}"}, status=status.HTTP_200_OK)
+
+
+class UnfollowUserView(generics.GenericAPIView):
+    queryset = CustomUser.objects.all()  #  required
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, user_id):
+        try:
+            target_user = CustomUser.objects.get(id=user_id)
+        except CustomUser.DoesNotExist:
+            return Response({"detail": "User does not exist."}, status=status.HTTP_404_NOT_FOUND)
+
+        request.user.following.remove(target_user)
+        return Response({"detail": f"You have unfollowed {target_user.username}"}, status=status.HTTP_200_OK)
